@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Afacad:wght@300;400;500;600&display=swap');
+
+body {
+  background-color: rgba(193, 195, 243, 0.01);
+  font-family: 'Afacad';
+}
+a {
+  color: rgba(0, 0, 0, 1);
+}
+.App {
+  text-align: center;
+}
+:root {
+  --button-background-color: rgba(32, 115, 179, 0.05);
+  --button-background-color-hover: rgba(32, 115, 179, 0.15);
+  --button-border-color: rgba(32, 115, 179, 1);
+  --button-border-color-hover: rgba(32, 115, 179, 0.5);
+  --button-color: rgba(32, 115, 179, 1);
+
+  --button-background-color-secondary: rgba(32, 115, 179, 0.05);
+  --button-background-color-hover-secondary: rgba(32, 115, 179, 0.15);
+  --button-border-color-secondary: rgba(32, 115, 179, 1);
+  --button-border-color-hover-secondary: rgba(32, 115, 179, 0.5);
+  --button-color-secondary: rgba(32, 115, 179, 1);
+
+  --button-background-color-secondary-dark: rgba(32, 115, 179, 1);
+  --button-background-color-hover-secondary-dark: rgba(32, 115, 179, 0.5);
+  
+  --font-family: 'Afacad';
+  --primary-color: rgba(250, 172, 111, 1);
+  --text-color-main: rgba(255, 255, 255, 1);
+  --text-color-secondary: rgba(32, 115, 179, 1);
+}
+
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: black;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.MuiChip-deleteIcon path {
+  color: white;
+}
