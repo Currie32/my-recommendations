@@ -76,7 +76,7 @@ export default function App() {
         let results = tagsDocSnap.data().tags
         results = results.map(tag => ({
           label: tag,
-          group: 'tag'
+          group: 'tags'
         }));
         setTagsAll(results);
       } catch (error) {
@@ -93,7 +93,7 @@ export default function App() {
         const tagsDocRef = doc(db, "usernames", "all_usernames");
         const tagsDocSnap = await getDoc(tagsDocRef);
         let results = tagsDocSnap.data().usernames
-        setUsernames(results.map(name => ({ label: name, group: 'username' })));
+        setUsernames(results.map(name => ({ label: name, group: 'users' })));
       } catch (error) {
         console.error('Error fetching usernames:', error);
       }

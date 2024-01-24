@@ -1,11 +1,9 @@
 
 import { getAnalytics, logEvent } from "firebase/analytics";
 import Grid from '@material-ui/core/Grid';
-import { Link } from 'react-router-dom';
 import styled from "styled-components";
 
 import buyMeACoffee from './buyMeACoffee.png';
-import * as ROUTES from '../../constants/routes';
 
 
 const FooterSection = styled.div`
@@ -23,7 +21,7 @@ const List = styled.ul`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 10px;
+  padding: 10px 20px 0px;
   @media (max-width: 683px) {
     display: block;
     justify-content: left;
@@ -39,13 +37,11 @@ const ListItemLast = styled.li`
   display: inline-block;
   padding: 3px 20px;
 `;
-const StyledLink = styled(Link)`
-  text-decoration: none;
-  :hover {text-decoration: underline}
-  white-space: nowrap;
-`;
 const StyledBuyMeACoffee = styled.img`
   width: 150px;
+  @media (max-width: 683px) {
+    margin: 10px 0px -15px;
+  }
 `;
 
 export default function Footer() {

@@ -125,7 +125,8 @@ function NavigationAuth({username, usernamePage}) {
           }
           else {
             setMenuDisplay(false)
-          }}}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+          }
+        }}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow style={{paddingBottom: '15px'}}><ButtonSignOut onClick={() => {setMenuDisplay(false); logout()}}>Sign out</ButtonSignOut></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
     </div>}
@@ -136,6 +137,9 @@ function NavigationAuth({username, usernamePage}) {
         <ListItem><StyledLink to={username} onClick={() => {
           if (usernamePage & (username !== usernamePage)) {
             window.location.href=`/${username}`;
+          }
+          else {
+            setMenuDisplay(false)
           }
         }}>Account</StyledLink></ListItem>
         <ListItem style={{marginTop: '5px'}}><ButtonSignOut onClick={logout}>Sign out</ButtonSignOut></ListItem>

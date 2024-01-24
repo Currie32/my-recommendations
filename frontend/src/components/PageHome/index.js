@@ -2,6 +2,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Chip from '@material-ui/core/Chip';
 import TextField from '@material-ui/core/TextField';
+import PlaceIcon from '@mui/icons-material/Place';
 import SubdirectoryArrowLeftIcon from '@mui/icons-material/SubdirectoryArrowLeft';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
@@ -15,12 +16,17 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 const Content = styled.div`
   margin: auto;
   max-width: 600px;
+  @media (max-width: 600px) {
+    max-width: 100%;
+  }
 `;
 const StyledHint = styled.div`
   font-size: 16px;
   font-style: italic;
   color: var(--text-color-secondary);
+  line-height: 1;
   max-width: 560px;
+  margin-bottom: 8px;
 `;
 const StyledInputs = styled.div`
   display: flex;
@@ -50,17 +56,23 @@ const StyledRecommendationName = styled.div`
 `
 const StyledRecommendationLocation = styled.div`
   font-size: 16px;
-  margin-bottom: -6px;
 `
-const StyledRecommendationLink = styled.a`
-  font-size: 16px;
+const StyledRecommendationLocationLink = styled.a`
+  text-decoration: none;
   &:hover {
     color: var(--text-color-secondary);
-  }
+  };
+`
+const StyledRecommendationLink = styled.a`
+  font-size: 15px;
+  &:hover {
+    color: var(--text-color-secondary);
+  };
 `
 const StyledRecommendationRecommenders = styled.div`
   display: flex;
   font-size: 16px;
+  margin-top: 5px;
 `
 const StyledRecommendationRecommender = styled.a`
   background-color: var(--button-background-color-secondary);
@@ -120,7 +132,6 @@ export default function PageHome({uid, tagsAll, usernames}) {
     const getRecommendationsFunction = httpsCallable(functions, 'get_recommendations');
     const response = await getRecommendationsFunction({tags: tags.map(tag => tag.replace(/\s+/g, '_')), uid: uid})
     setLoading(false)
-    console.log(response['data']['results'])
     try {
       const data = await response['data']['results'].map(doc => {
         return {
@@ -154,7 +165,7 @@ export default function PageHome({uid, tagsAll, usernames}) {
               groupBy={(option) => option.group}
               onChange={(event, option) => {
                 if (option.length > 0) {
-                  if (option[option.length - 1]?.group === 'username') {
+                  if (option[option.length - 1]?.group === 'users') {
                     window.location.href = `/${option[option.length - 1].label}`;
                   }
                 }
@@ -196,10 +207,19 @@ export default function PageHome({uid, tagsAll, usernames}) {
                 <StyledTags>
                   {recommendation.tags.sort().join(', ')}                  
                 </StyledTags>
-                <StyledRecommendationLocation>{recommendation.location}</StyledRecommendationLocation>
-                <div>
-                  <StyledRecommendationLink href={recommendation.url} target="_blank">{recommendation.url}</StyledRecommendationLink>
-                </div>
+                {recommendation.location && <StyledRecommendationLocation>
+                  {/* Create a link to google maps using the recommendation title and location when the user clicks on PlaceIcon */}
+                  <StyledRecommendationLocationLink href={`https://www.google.com/maps/search/${recommendation.title}+${recommendation.location}`} target="_blank">
+                    <PlaceIcon style={{
+                      color: 'var(--button-background-color-secondary-dark)',
+                      margin: "2px 0 -5px -5px",
+                    }}/>
+                    {recommendation.location}
+                  </StyledRecommendationLocationLink>
+                </StyledRecommendationLocation>}
+                {recommendation.url && <div style={{marginTop: "-5px", marginBottom: "10px", lineHeight: 1.2, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                  <StyledRecommendationLink href={recommendation.url} target="_blank">{recommendation.url.startsWith("http") ? recommendation.url : `https://${recommendation.url}`}</StyledRecommendationLink>
+                </div>}
                 <StyledRecommendationRecommenders>{recommendation.recommenders.map((recommender, rIndex) => (
                   <StyledRecommendationRecommender href={`/${recommender}`} key={rIndex}>{recommender}</StyledRecommendationRecommender>
                 ))}</StyledRecommendationRecommenders>

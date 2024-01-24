@@ -43,8 +43,10 @@ const StyledHint = styled.div`
   font-size: 16px;
   font-style: italic;
   color: var(--text-color-secondary);
+  line-height: 1;
+  max-width: 560px;
+  margin-bottom: 15px;
   margin-top: -10px;
-  margin-bottom: 10px;
 `;
 const StyledButtonSaveRecommendations = styledMUI(Button)({
   backgroundColor: 'var(--button-background-color)',
@@ -210,16 +212,16 @@ export default function PageAccount({
 
   // Fetch recommendations for the User ID of the page
   useEffect(() => {
-    if (uid) {
+    if (usernamePageUID) {
       setLoading(true)
-      fetchRecommendations(db, uid, usernamePageUID)
+      fetchRecommendations(db, usernamePageUID)
         .then((userRecommendations) => {
           setRecommendations(userRecommendations);
           setRecommendationsOriginal(userRecommendations);
         });
       setLoading(false)
     }
-  }, [uid, usernamePageUID])
+  }, [usernamePageUID])
 
 
   const [recommendations, setRecommendations] = useState([]);

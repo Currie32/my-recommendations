@@ -31,14 +31,11 @@ async function fetchFollowing(db, usernamePage, getUsernamePageUID, getFollowing
 }
 
 
-async function fetchRecommendations(db, uid, usernamePageUID) {
+async function fetchRecommendations(db, uid) {
   try {
     // Set the document reference to the logged in user
     // Unless they are on the account page of another user
     let userRecommendationsDocRef = doc(db, "userRecommendations", uid);
-    if (usernamePageUID && (uid !== usernamePageUID)) {
-      userRecommendationsDocRef = doc(db, "userRecommendations", usernamePageUID);
-    }
     
     const userRecommendationsDocSnap = await getDoc(userRecommendationsDocRef);
     let recommendationIDs = [];
