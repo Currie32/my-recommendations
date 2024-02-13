@@ -1,4 +1,5 @@
 import Chip from '@mui/material/Chip';
+import React from 'react';
 
 
 function addRecommendation(recommendations, getRecommendations) {
@@ -42,7 +43,6 @@ function deleteRecommendation(recommendations, recommendationID, setRecommendati
 }
 
 
-
 function dictionaryMatcher(dictionaries, targetDictionary) {
   if (!dictionaries || dictionaries.length === 0) {
     return false;
@@ -75,7 +75,6 @@ function dictionaryMatcher(dictionaries, targetDictionary) {
 }
 
 
-
 const handleFieldChange = (recommendations, recommendationId, field, value, getTitleForSearching, getRecommendations) => {
         
     const updatedRecommendations = recommendations.map((recommendation) => {
@@ -87,10 +86,10 @@ const handleFieldChange = (recommendations, recommendationId, field, value, getT
           const newValue = value.map(_convertToDictionary);
           const newTags = newValue.map(tag => ({ label: tag }));
           return { ...recommendation, tags: newTags };
-        } 
+        }
         return { ...recommendation, [field]: value};
       }
-        return recommendation;
+      return recommendation;
     });
     getRecommendations(updatedRecommendations);
 };

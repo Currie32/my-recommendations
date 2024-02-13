@@ -70,3 +70,11 @@ a {
 .MuiChip-deleteIcon path {
   color: white;
 }
+
+.leaflet-popup-content div a {
+  color: rgba(0, 0, 0, 1);
+}
+
+.leaflet-popup-content div a:hover {
+  color: rgba(32, 115, 179, 1);
+}

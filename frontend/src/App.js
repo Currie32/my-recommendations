@@ -1,5 +1,5 @@
 import { getDoc, getFirestore, doc } from "firebase/firestore";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import Grid from '@material-ui/core/Grid';
 import styled from 'styled-components';
@@ -42,12 +42,14 @@ export default function App() {
   const { user } = useContext(AuthContext);
   
   const [following, setFollowing] = useState([])
+  const memoizedFollowing = useMemo(() => following, [following]);
   const [followingOriginal, setFollowingOriginal] = useState([])
   const [redirectToHome, setRedirectToHome] = useState(false)
   const [tagsAll, setTagsAll] = useState([])
   const [uid, setUid] = useState(false);
   const [username, setUsername] = useState(false);
   const [usernames, setUsernames] = useState([])
+  const memoizedUsernames = useMemo(() => usernames, [usernames]);
 
   const getFollowing = (f) => {setFollowing(f)}
   const getFollowingOriginal = (f) => {setFollowingOriginal(f)}
@@ -161,9 +163,9 @@ export default function App() {
                 ) : (
                   <PageAccount
                     uid={uid} tagsAll={tagsAll} getTagsAll={getTagsAll}
-                    username={username} getUsername={getUsername} usernames={usernames}
+                    username={username} getUsername={getUsername} usernames={memoizedUsernames}
                     usernamePage={usernamePage} getUsernamePage={getUsernamePage}
-                    following={following} getFollowing={getFollowing}
+                    following={memoizedFollowing} getFollowing={getFollowing}
                     followingOriginal={followingOriginal} getFollowingOriginal={getFollowingOriginal}
                   />
                 )

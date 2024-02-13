@@ -1,6 +1,7 @@
 import { collection, collectionGroup, doc, getDoc, getDocs, query, setDoc, where, updateDoc } from "firebase/firestore";
 import CheckIcon from '@mui/icons-material/Check';
 
+
 const { dictionaryMatcher, generateSubstrings } = require('./utils');
 
 
@@ -69,7 +70,7 @@ async function fetchRecommendations(db, uid) {
       // Iterate through the query results and store them in recommendations
       queryRecommendationsSnapshot.forEach((document) => {
         const recommendation = document.data();
-        recommendation['tags'] = recommendation.tags.map(tag => ({ label: tag.replaceAll('_', ' ') }));
+        recommendation['tags'] = recommendation.tags.map(tag => ({ label: tag }));
         recommendations.push(recommendation);
       });
     }
@@ -88,6 +89,28 @@ async function fetchRecommendations(db, uid) {
   } catch (error) {
     console.error('Error fetching recommendations:', error);
     return [];
+  }
+}
+
+
+async function getLatLonFromAddress(address) {
+  const base_url = "https://nominatim.openstreetmap.org/search";
+  const params = new URLSearchParams({
+      q: address,
+      format: 'json'
+  });
+
+  const url = `${base_url}?${params.toString()}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (data && data.length > 0) {
+      // Assuming the first result is the most relevant
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      return { lat, lon };
+  } else {
+      return "", "";
   }
 }
 
@@ -159,16 +182,36 @@ async function saveRecommendations(db, recommendations, recommendationsOriginal,
 
         // Generate substrings of title for autocomplete search
         const titleSubstrings = generateSubstrings(recommendationToSave.title);
+
+        // Get latitude and longitude from address
+        if (recommendationToSave.location) {
+          const { lat, lon } = await getLatLonFromAddress(recommendationToSave.location);
+          if (lat && lon) {
+            recommendationToSave['latitude'] = lat;
+            recommendationToSave['longitude'] = lon;
+          }
+          else if (!recommendationToSave['latitude'] && !recommendationToSave['longitude']) {
+            recommendationToSave['latitude'] = "";
+            recommendationToSave['longitude'] = "";
+          }
+          // Add a one second wait
+          setTimeout(() => {}, 1000);
+        } else {
+          recommendationToSave['latitude'] = "";
+          recommendationToSave['longitude'] = "";
+        }
     
         recommendationToSave = {
           id: recommendationToSave.id.trim(),
+          latitude: recommendationToSave?.latitude,
+          longitude: recommendationToSave?.longitude,
           location: recommendationToSave.location.trim(),
           recommenders: recommendationToSave.recommenders,
-          tags: recommendationToSave.tags.map(tag => tag.replace(/\s+/g, '_')),
+          tags: recommendationToSave.tags,
           title: recommendationToSave.title.trim(),
           url: recommendationToSave.url.trim(),
           // Create key for each tag in the recommendation and set its value as true
-          ...recommendationToSave.tags.reduce((obj, tag) => ({ ...obj, [tag.replace(/\s+/g, '_')]: true }), {}),
+          ...recommendationToSave.tags.reduce((obj, tag) => ({ ...obj, [tag.replace(/[^a-z0-9]+/g, '')]: true }), {}),
           // Create a key for each substring in the title and set its value as true
           ...titleSubstrings.reduce((obj, substring) => ({ ...obj, [substring]: true }), {}),
         };

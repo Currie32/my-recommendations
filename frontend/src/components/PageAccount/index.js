@@ -5,9 +5,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { styled as styledMUI } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
 import { getFirestore } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
+
 
 const {
   fetchFollowing, fetchRecommendations,
@@ -15,6 +16,7 @@ const {
   saveFollowing, saveRecommendations, saveTags, saveUserRecommendations, saveUsername, searchName
 } = require('./db_handler')
 const { addRecommendation, CustomChip, deleteRecommendation, handleFieldChange, handleResultClick, replaceInvalidID } = require('./utils');
+const { Map } = require('../Map/map');
 const filterAutocomplete = createFilterOptions();
 
 
@@ -172,12 +174,10 @@ export default function PageAccount({
   const [loading, setLoading] = useState(false)
 
   const [usernamePageUID, setUsernamePageUID] = useState(null);  
-  const getUsernamePageUID = (usernamePageUID) => {
-    setUsernamePageUID(usernamePageUID);
-  }
+  const getUsernamePageUID = (u) => {setUsernamePageUID(u)}
   // Update the following value when usernamePage or username change 
   useEffect(() => {
-    if (usernamePage && username && (usernamePage !== username)) {
+    if (usernamePage) {
       fetchFollowing(db, usernamePage, getUsernamePageUID, getFollowing);
     }
   }, [usernamePage, username]);
@@ -218,14 +218,16 @@ export default function PageAccount({
         .then((userRecommendations) => {
           setRecommendations(userRecommendations);
           setRecommendationsOriginal(userRecommendations);
-        });
-      setLoading(false)
+          setLoading(false)
+        });      
     }
   }, [usernamePageUID])
 
 
   const [recommendations, setRecommendations] = useState([]);
-  const getRecommendations = (r) => {setRecommendations(r)}
+  const memoRecommendations = useMemo(() => recommendations, [recommendations]);
+  const getRecommendations = (r) => {
+    setRecommendations(r)}
   const [recommendationsOriginal, setRecommendationsOriginal] = useState([]);
   // Save new order of recommendations after drag and drop
   const onDragEnd = (result) => {
@@ -278,6 +280,25 @@ export default function PageAccount({
       searchName(db, titleForSearching, getResults);
     }
   }, [titleForSearchingCurrent]);
+
+
+  const [tempNote, setTempNote] = useState('');
+  const [tempNoteDelayed, setTempNoteDelayed] = useState('');
+  const [tempNoteIndex, setTempNoteIndex] = useState(-1);
+  const getTempNote = (t, index) => {
+    setTempNote(t)
+    setTempNoteIndex(index)
+    setTimeout(() => {setTempNoteDelayed(t)}, 100)
+  }
+  
+  useEffect(() => {
+    if (tempNoteIndex !== -1 && (tempNote === tempNoteDelayed)) {
+      const updatedRecommendations = [...recommendations];
+      updatedRecommendations[tempNoteIndex].note = tempNoteDelayed;
+      setRecommendations(updatedRecommendations);
+    }
+  }, [tempNoteDelayed]);
+  
 
   return (
     <Content>
@@ -337,7 +358,7 @@ export default function PageAccount({
 
       <h2>Recommendations from {usernamePage}</h2>
       
-      {recommendations.length > 0 && <div>
+      {(memoRecommendations.length > 0 && !loading) && <div>
         <StyledButtonSaveRecommendations
           variant="contained"
           color="primary"
@@ -351,7 +372,7 @@ export default function PageAccount({
         <Droppable droppableId="droppable">
           {(provided) => (
             <StyledRecommendations {...provided.droppableProps} ref={provided.innerRef}>
-              {recommendations.map((recommendation, index) => (
+              {memoRecommendations.map((recommendation, index) => (
                 <Draggable key={recommendation.id} draggableId={recommendation.id} index={index}>
                   {(provided) => (
                     <div
@@ -449,10 +470,10 @@ export default function PageAccount({
                           multiline
                           inputProps={{style: {fontSize: 15, lineHeight: 1.2}}}
                           disabled={username !== usernamePage}
-                          value={recommendation.note}
-                          onChange={(event) => handleFieldChange(
-                            recommendations, recommendation.id, 'note', event.target.value, getTitleForSearching, getRecommendations
-                          )}
+                          value={index === tempNoteIndex ? tempNote : recommendation.note}
+                          onChange={(event) => {
+                            getTempNote(event.target.value, index)
+                          }}
                         /></StyledRecommendationItem>
                         <StyledRecommendationItem><TextField
                           label="Location"
@@ -492,7 +513,7 @@ export default function PageAccount({
       </div>}
 
       {loading && <div style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
-        <CircularProgress style={{ color: 'black' }}/>
+        <CircularProgress style={{ color: 'button-background-color-secondary' }}/>
       </div>}
 
       {!loading && <StyledButton>
@@ -500,6 +521,10 @@ export default function PageAccount({
           Add a Recommendation
         </StyledButtonAddRecommendation>
       </StyledButton>}
+
+      {(memoRecommendations.length > 0 && !loading) && <div style={{marginTop: '30px'}}>
+        <Map recommendations={memoRecommendations} showRecommenders={false} />
+      </div>}
     </Content>
   )
 }

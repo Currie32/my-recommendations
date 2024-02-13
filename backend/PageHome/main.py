@@ -44,6 +44,8 @@ def get_recommendations(request):
         doc = doc.to_dict()
         results.append({
             "location": doc['location'],
+            "latitude": doc.get('latitude'),
+            "longitude": doc.get('longitude'),
             "recommenders": doc['recommenders'],
             "tags": doc['tags'],
             "title": doc['title'],

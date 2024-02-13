@@ -1,3 +1,4 @@
+
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Chip from '@material-ui/core/Chip';
@@ -11,6 +12,10 @@ import Typography from '@mui/material/Typography';
 import { Fragment, useState } from "react";
 import styled from 'styled-components';
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { Link } from 'react-router-dom';
+import * as ROUTES from '../../constants/routes';
+const { Map } = require('../Map/map');
+
 
 
 const Content = styled.div`
@@ -20,18 +25,26 @@ const Content = styled.div`
     max-width: 100%;
   }
 `;
-const StyledHint = styled.div`
-  font-size: 16px;
-  font-style: italic;
-  color: var(--text-color-secondary);
-  line-height: 1;
-  max-width: 560px;
-  margin-bottom: 8px;
-`;
 const StyledInputs = styled.div`
   display: flex;
   margin-bottom: 20px;
   margin-top: 15px;
+`
+const StyledRecommendationsBox = styled.div`
+  height: fit-content;
+  max-height: 400px;
+  overflow-y: scroll;
+  margin: 25px auto;
+  background: /* Shadow covers */
+  linear-gradient(#fafafa 30%, rgba(255, 255, 255, 0)), linear-gradient(rgba(255, 255, 255, 0), #fafafa 70%) 0 100%, /* Shadows */
+  radial-gradient(50% 0, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)), radial-gradient(50% 100%, farthest-side, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+  background: /* Shadow covers */
+  linear-gradient(#fafafa 30%, rgba(255, 255, 255, 0)), linear-gradient(rgba(255, 255, 255, 0), #fafafa 70%) 0 100%, /* Shadows */
+  radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)), radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+  /* Opera doesn't support this in the shorthand */
+  background-attachment: local, local, scroll, scroll;
 `
 const StyledChooseTags = styled.div`
   margin-right: 10px;
@@ -52,7 +65,14 @@ const ButtonGetRecommendations = styledMUI(Button)({
 })
 const StyledRecommendationName = styled.div`
   color: var(--text-color-secondary);
+  line-height: 1.2;
   margin-top: 15px;
+`
+const StyledTags = styled.div`
+  color: #777;
+  font-size: 15px;
+  font-style: italic;
+  margin: -3px 0px;
 `
 const StyledRecommendationLocation = styled.div`
   font-size: 16px;
@@ -86,12 +106,6 @@ const StyledRecommendationRecommender = styled.a`
     background-color: var(--button-background-color-hover-secondary);
   }
 `
-const StyledTags = styled.div`
-  color: #777;
-  font-size: 15px;
-  font-style: italic;
-  margin: -3px 0px;
-`
 const CustomChip = ({ index, option, getTagProps }) => {
   return (
     <Chip
@@ -110,6 +124,50 @@ const CustomChip = ({ index, option, getTagProps }) => {
     />
   );
 };
+const StyledInfo = styled.p`
+color: #555;
+  font-size: 20px;
+  font-style: italic;
+  line-height: 1;
+  margin: 6px 10px 10px 0px;
+`;
+const StyledInfoDiv = styled.div`
+  display: flex;
+  @media (max-width: 675px) {
+    display: block;
+  }
+`
+const StyledTag = styled.div`
+  background-color: var(--button-background-color-secondary-dark);
+  border: 1px solid var(--button-border-color-secondary);
+  border-radius: 16px;
+  color: white;
+  font-size: 15px;
+  margin: 0px 0px 25px 5px;
+  padding: 5px 12px;
+  width: fit-content;
+  @media (max-width: 450px) {
+    margin: 0px auto 25px;
+  }
+`
+const StyledButtonCreateAccount = styled(Link)`
+  background-color: var(--button-background-color);
+  border: 1px solid var(--button-border-color);  
+  border-radius: 5px;
+  color: var(--button-color);
+  font-size: 18px;
+  font-weight: 200;
+  padding: 7px 0px;
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+  min-width: 300px;
+  
+  &:hover {
+    background-color: var(--button-background-color-hover);
+    border-color: var(--button-border-color-hover);
+  };
+`
 
 
 export default function PageHome({uid, tagsAll, usernames}) {
@@ -130,15 +188,17 @@ export default function PageHome({uid, tagsAll, usernames}) {
     setLoading(true)
     logEvent(analytics, 'Search tags', { tags: tags})
     const getRecommendationsFunction = httpsCallable(functions, 'get_recommendations');
-    const response = await getRecommendationsFunction({tags: tags.map(tag => tag.replace(/\s+/g, '_')), uid: uid})
+    const response = await getRecommendationsFunction({tags: tags.map(tag => tag.replace(/[^a-z0-9]+/g, '')), uid: uid})
     setLoading(false)
     try {
       const data = await response['data']['results'].map(doc => {
         return {
           title: doc['title'],
+          latitude: doc['latitude'],
+          longitude: doc['longitude'],
           location: doc['location'],
           url: doc['url'],
-          tags: doc['tags'].map(tag => tag.replace('_', ' ')),
+          tags: doc['tags'],
           recommenders: doc['recommenders'],
         }
       });
@@ -152,8 +212,6 @@ export default function PageHome({uid, tagsAll, usernames}) {
   return (
     <Content>
       { tagsAll && <div>
-        <StyledHint>Use tags to find recommended restaurants, podcasts, books, and more.</StyledHint>
-        <StyledHint>Combine tags to find more specific recommendations, such as cafes in a particular city.</StyledHint>
         <StyledInputs>
           <StyledChooseTags>
             <Autocomplete
@@ -199,7 +257,7 @@ export default function PageHome({uid, tagsAll, usernames}) {
         {loading && <div style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
           <CircularProgress/>
         </div>}
-        {recommendations && 
+        {recommendations && <StyledRecommendationsBox>{
           recommendations?.map((recommendation, index) => (
             <Fragment key={index}>
               <Typography variant="h6" component="div" gutterBottom>
@@ -226,11 +284,38 @@ export default function PageHome({uid, tagsAll, usernames}) {
               </Typography>
             </Fragment>
           ))
-        }
-        {recommendations?.length === 0 && <div style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
+        }</StyledRecommendationsBox>}
+        {recommendations && <Map recommendations={recommendations} />}
+        {(recommendations && recommendations?.length === 0) && <div style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
           <p style={{fontSize: '20px', color: '#222'}}>
             There aren't any recommendations that match all of those tags.
           </p>
+        </div>}
+        {(!recommendations && uid === "default" && !loading) && <div style={{margin: '30px auto 10px'}}>
+          <StyledInfoDiv>
+            <StyledInfo>Search for recommendations using tags</StyledInfo>
+            <StyledTag>vancouver</StyledTag>
+          </StyledInfoDiv>
+          <StyledInfoDiv>
+            <StyledInfo>Use multiple tags to be more specific</StyledInfo>
+            <div style={{display: 'flex'}}>
+              <StyledTag>vancouver</StyledTag>
+              <StyledTag>restaurant</StyledTag>
+              <StyledTag>sharing plates</StyledTag>
+            </div>
+          </StyledInfoDiv>
+          <StyledInfoDiv>
+            <StyledInfo>Search for a user to see all of their recommendations</StyledInfo>
+            <StyledTag>dave</StyledTag>
+          </StyledInfoDiv>
+            <StyledInfo>Create an account to add your own recommendations</StyledInfo>
+          <StyledInfoDiv>
+            <div style={{minWidth: '100%', display: 'flex'}}>
+            <StyledButtonCreateAccount to={ROUTES.SIGN_UP}>
+              Create an Account
+          </StyledButtonCreateAccount>
+          </div>
+          </StyledInfoDiv>
         </div>}
       </div>}
     </Content>
